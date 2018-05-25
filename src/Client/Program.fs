@@ -22,8 +22,8 @@ type Model = {
 }
 
 type Msg = 
-        | RouteChange of Page
-        | HomePageLoad of HomePage.Msg
+    | RouteChange of Page
+    | HomePageLoad of HomePage.Msg
 
 let pageToUri page =
     match page with
