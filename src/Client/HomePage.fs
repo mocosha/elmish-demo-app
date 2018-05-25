@@ -17,7 +17,6 @@ type Msg =
 | InsertMap of MapComponent.Msg
 | DatepPickerFirstDateChange of DatePicker.Msg
 | DatepPickerSecondDateChange of DatePicker.Msg
-| Load
 
 let init() : Model * Cmd<Msg>= 
     let datepickerFirstState = DatePicker.init()
@@ -43,8 +42,6 @@ let update (msg:Msg) (model:Model) : Model * Cmd<Msg> =
     | DatepPickerSecondDateChange x ->
         let datepickerSecondModel = DatePicker.update x model.DatepickerSecond
         { model with DatepickerSecond = datepickerSecondModel; DatepickerFirst = datepickerSecondModel }, Cmd.none
-    | Load _ -> 
-        init()
 
 let view (model : Model) (dispatch : Msg -> unit) =
     Container.container [ Container.IsFluid ] [ 

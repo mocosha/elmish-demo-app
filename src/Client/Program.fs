@@ -19,11 +19,13 @@ type Model = {
     Query: string
     Uri: string
     HomePageModel: HomePage.Model
+    SearchPageModel: SearchPage.Model
 }
 
 type Msg = 
     | RouteChange of Page
     | HomePageLoad of HomePage.Msg
+    | SearchPageLoad of SearchPage.Msg
 
 let pageToUri page =
     match page with
@@ -47,7 +49,8 @@ let urlUpdate (result: Option<Page>) (model : Model) : Model * Cmd<Msg> =
 
 let init initRoute = 
     let homePageInitState, _ = HomePage.init()
-    let model = { Route = Home; Query = ""; Uri = pageToUri Home; HomePageModel = homePageInitState }
+    let searchPageInitState, _ = SearchPage.init()
+    let model = { Route = Home; Query = ""; Uri = pageToUri Home; HomePageModel = homePageInitState; SearchPageModel = searchPageInitState }
     urlUpdate initRoute model
 
 let update (msg:Msg) (model:Model) =
@@ -57,6 +60,9 @@ let update (msg:Msg) (model:Model) =
                 | HomePageLoad x -> 
                     let homePageModel, _ = HomePage.update x model.HomePageModel
                     { model with HomePageModel = homePageModel }, Cmd.none
+                | SearchPageLoad x -> 
+                    let searchPageModel, _ = SearchPage.update x model.SearchPageModel
+                    { model with SearchPageModel = searchPageModel }, Cmd.none
                     
 let view (model : Model) (dispatch : Msg -> unit) =
     let child = match model.Route with 
@@ -68,7 +74,8 @@ let view (model : Model) (dispatch : Msg -> unit) =
                                         Search |> RouteChange |> dispatch
                                     ) 
                                 ] ] 
-                                [ R.str "To search" ] ]
+                                [ R.str "To search" ] 
+                              HomePage.view model.HomePageModel (HomePageLoad >> dispatch) ]
                 | Search _ -> 
                     R.div   [ R.classList [ "block", true ] ]
                             [ Button.a 
@@ -77,8 +84,8 @@ let view (model : Model) (dispatch : Msg -> unit) =
                                         Home |> RouteChange |> dispatch
                                     ) 
                                 ] ] 
-                                [ R.str "Back" ]
-                              HomePage.view model.HomePageModel (HomePageLoad >> dispatch) ]
+                                [ R.str "Back" ] 
+                              SearchPage.view model.SearchPageModel (SearchPageLoad >> dispatch)]
 
     Container.container [ Container.IsFluid ] [ Content.content [] [ child ] ]
 
