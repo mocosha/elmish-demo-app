@@ -22,7 +22,8 @@ let init() : Model * Cmd<Msg> =
 let update (msg:Msg) (model:Model) : Model * Cmd<Msg> =
     match msg with
     | AutosuggestChange x ->
-        { model with Autosuggest = Autosuggest.update x model.Autosuggest }, Cmd.none
+        let m, _ = Autosuggest.update x model.Autosuggest
+        { model with Autosuggest = m }, Cmd.none
 
 let view (model : Model) (dispatch : Msg -> unit) =
     Container.container [ Container.IsFluid ] [ 
