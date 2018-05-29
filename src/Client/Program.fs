@@ -25,7 +25,7 @@ type Model = {
 type Msg = 
     | RouteChange of Page
     | HomePageLoad of HomePage.Msg
-    | SearchPageLoad of SearchPage.Msg
+    | SearchPageMsg of SearchPage.Msg
 
 let pageToUri page =
     match page with
@@ -60,9 +60,9 @@ let update (msg:Msg) (model:Model) =
                 | HomePageLoad x -> 
                     let homePageModel, _ = HomePage.update x model.HomePageModel
                     { model with HomePageModel = homePageModel }, Cmd.none
-                | SearchPageLoad x -> 
-                    let searchPageModel, _ = SearchPage.update x model.SearchPageModel
-                    { model with SearchPageModel = searchPageModel }, Cmd.none
+                | SearchPageMsg x -> 
+                    let searchPageModel, cmd = SearchPage.update x model.SearchPageModel
+                    { model with SearchPageModel = searchPageModel }, Cmd.map SearchPageMsg cmd
                     
 let view (model : Model) (dispatch : Msg -> unit) =
     let child = match model.Route with 
@@ -85,7 +85,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                                     ) 
                                 ] ] 
                                 [ R.str "Back" ] 
-                              SearchPage.view model.SearchPageModel (SearchPageLoad >> dispatch)]
+                              SearchPage.view model.SearchPageModel (SearchPageMsg >> dispatch)]
 
     Container.container [ Container.IsFluid ] [ Content.content [] [ child ] ]
 

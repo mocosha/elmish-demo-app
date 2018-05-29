@@ -2203,8 +2203,7 @@ module Google =
             type [<AllowNullLiteral>] PlacesServiceStatic =
                 [<Emit "new $0($1...)">] abstract Create: attrContainer: U2<HTMLDivElement, Map> -> PlacesService
 
-            type PlacesServiceStatus =
-                obj
+            type PlacesServiceStatus = string
 
             type [<AllowNullLiteral>] QueryAutocompletePrediction =
                 abstract description: string with get, set

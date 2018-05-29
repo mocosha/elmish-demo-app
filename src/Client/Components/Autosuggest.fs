@@ -6,11 +6,13 @@ open Fable.Import
 open Fable.Helpers.React
 open Fable.Core
 open Fable.PowerPack
-open Fable.PowerPack.Fetch
 
 type FetchRequest = { value : string; reason: string }
+type SuggestionSelectedEvent = { suggestion : string; suggestionIndex: int }
+
 type OnSuggestionsFetchRequestedFunction = FetchRequest -> unit
 type OnSuggestionsClearRequestedFunction = unit -> unit
+type OnSuggestionSelectedFunction = obj -> SuggestionSelectedEvent -> unit
 type GetSuggestionValueFunction = string -> string
 type RenderSuggestionFunction = string -> React.ReactElement
 type OnChangeData = { method : string; newValue: string }
@@ -23,6 +25,7 @@ type AutosuggestProps =
     | Suggestions of string array 
     | OnSuggestionsFetchRequested of OnSuggestionsFetchRequestedFunction 
     | OnSuggestionsClearRequested of OnSuggestionsClearRequestedFunction
+    | OnSuggestionSelected of OnSuggestionSelectedFunction
     | GetSuggestionValue of GetSuggestionValueFunction
     | RenderSuggestion of RenderSuggestionFunction
     | InputProps of InputPropsDefinition
@@ -33,6 +36,7 @@ let inline AutosuggestComponent (props : AutosuggestProps list) (elems : React.R
 type Model = {
     Suggestions : string array
     Value : string
+    SelectedSuggestion : string
 }
 
 type Msg = 
@@ -41,18 +45,24 @@ type Msg =
     | OnInputChanges of string
     | OnResultsFetchSuccess of string array
     | OnResultsFetchError of exn
+    | OnSuggestionSelectedValue of string
 
 let searchPlaces (query : string) = 
-    sprintf "searchPlaces %s" query |> Browser.console.log
-    promise {
-        let uri = sprintf "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=%s&types=geocode" query
-        let! res = fetch uri []
-        let! data = res.text()
-        
-        return [|data|]
-    }
+    let executor = fun resolver rejector -> 
+        let mutable request = createEmpty<GoogleMaps.Google.Maps.Places.AutocompletionRequest>
+        request.input <- query
+        GoogleMap.autocompleteService.getPlacePredictions (request, (fun response status -> 
+            if not (status.Equals "OK")  then
+                System.Exception status |> rejector
+            else
+                response.ToArray () 
+                    |> Array.map (fun item -> item.description)
+                    |> resolver
+        ))
 
-let init () : Model = { Suggestions = [||]; Value = "" }
+    Promise.create executor
+
+let init () : Model = { Suggestions = [||]; Value = ""; SelectedSuggestion = "" }
 
 let update (msg : Msg) (model: Model) : Model*Cmd<Msg> =
     match msg with
@@ -67,6 +77,8 @@ let update (msg : Msg) (model: Model) : Model*Cmd<Msg> =
     | OnResultsFetchError exn -> 
         Browser.console.log exn
         { model with Suggestions = [||]}, Cmd.none
+    | OnSuggestionSelectedValue value -> 
+        { model with SelectedSuggestion = value }, Cmd.none
 
 let view (model : Model) (dispatch : Msg -> unit) = 
     let props = {
@@ -79,5 +91,6 @@ let view (model : Model) (dispatch : Msg -> unit) =
         OnSuggestionsFetchRequested (fun request -> SuggestionsFetchRequested request.value |> dispatch )
         GetSuggestionValue (fun suggestion -> suggestion)
         RenderSuggestion (fun suggestion -> b [] [ str suggestion] )
+        OnSuggestionSelected (fun _ ev -> OnSuggestionSelectedValue ev.suggestion |> dispatch )
         InputProps props
     ] []

@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Typings\Moment.fs" />
+    <Compile Include="..\Typings\GoogleMaps.fs" />
     <Compile Include="..\Typings\GoogleMap.fs" />
     <Compile Include="..\Shared\Shared.fs" />
     <Compile Include="..\Shared\Log.fs" />

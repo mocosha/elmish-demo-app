@@ -3,6 +3,7 @@ module GoogleMap
     open Fable.Core
     open Fable.Import
     open Fable.PowerPack
+    open GoogleMaps.Google.Maps.Places
 
     type GoogleLatLng = { 
         lat: unit -> Decimal
@@ -40,6 +41,9 @@ module GoogleMap
     
     [<Emit("new google.maps.LatLng($0, $1)")>]
     let createMapLatLng (lat: Decimal) (lng: Decimal): GoogleLatLng = jsNative
+
+    [<Emit("new google.maps.places.AutocompleteService()")>]
+    let autocompleteService: AutocompleteService = jsNative
 
     let createMap (element: Browser.HTMLElement) (options: GoogleMapOptions)  = 
         let map = _createMap element options
