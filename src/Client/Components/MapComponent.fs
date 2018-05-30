@@ -1,7 +1,6 @@
 module MapComponent
 
 open Elmish
-open Fable.Import
 open Fable.Helpers.React
 open Fable.Helpers.React.Props
 
@@ -33,16 +32,14 @@ let update (msg : Msg) (model : Model) : Model * Cmd<Msg> =
             { model with mapIsLoaded = false}, Cmd.none
  
 let view (model : Model) (dispatch : Msg -> unit) =
-    Browser.console.log "MapComponent.view"
     div [ Ref (fun el -> 
             if isNull el && model.mapIsLoaded then
                 dispatch MapDivUnloaded
 
             if not (isNull el) then
-                if not model.mapIsLoaded then
-                    let id = mapDivId()
-                    el.id <- id
-                    id |> MapDivLoaded |> dispatch
+                if not model.mapIsLoaded && el.id.Length < 1 then
+                    el.id <- mapDivId()
+                    el.id |> MapDivLoaded |> dispatch
           )
           Style [ CSSProp.Height "400px" 
                   CSSProp.Width "300px"] ] 
