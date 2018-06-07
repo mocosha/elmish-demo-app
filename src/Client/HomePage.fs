@@ -8,34 +8,36 @@ open Fable.Helpers.React.Props
 
 importDefault "bulma/css/bulma.css"
 
-type Model = {
-    Map: MapComponent.Model
-    SecondMap: MapComponent.Model
-    DatepickerFirst: DatePicker.Model
-    DatepickerSecond: DatePicker.Model
-}
+type Model = 
+    { Map: MapComponent.Model
+      SecondMap: MapComponent.Model
+      DatepickerFirst: DatePicker.Model
+      DatepickerSecond: DatePicker.Model }
 
 type Msg = 
-| MapComponentMsg of MapComponent.Msg
-| SecondMapComponentMsg of MapComponent.Msg
-| DatepPickerFirstDateChange of DatePicker.Msg
-| DatepPickerSecondDateChange of DatePicker.Msg
+    | MapComponentMsg of MapComponent.Msg
+    | SecondMapComponentMsg of MapComponent.Msg
+    | DatePickerFirstDateMsg of DatePicker.Msg
+    | DatePickerSecondDateMsg of DatePicker.Msg
 
-let init() : Model * Cmd<Msg>= 
-    let datepickerFirstState = DatePicker.init()
-    let datepickerSecondState = DatePicker.init()
-    let mapComponentState, _ = MapComponent.init()
-    let initialState = { 
-        Map = { mapComponentState with options = { mapComponentState.options with zoom = 6.0m } }
-        SecondMap = { mapComponentState with options = { mapComponentState.options with zoom = 8.0m } }
-        DatepickerFirst = datepickerFirstState
-        DatepickerSecond = datepickerSecondState
-    }
-    initialState, Cmd.batch [ 
-        Cmd.map DatepPickerFirstDateChange Cmd.none
-        Cmd.map DatepPickerSecondDateChange Cmd.none ]
+let init () : Model * Cmd<Msg>= 
+    let datepickerFirstState = DatePicker.init ()
+    let datepickerSecondState = DatePicker.init ()
+    let mapComponentState, _ = MapComponent.init ()
 
-let update (msg:Msg) (model:Model) : Model * Cmd<Msg> =
+    let setZoomLevel zoom = 
+        { mapComponentState with options = { mapComponentState.options with zoom = zoom } }
+
+    let initialState = 
+        { Map = setZoomLevel 6.0m 
+          SecondMap = setZoomLevel 8.0m
+          DatepickerFirst = datepickerFirstState
+          DatepickerSecond = datepickerSecondState }
+    initialState, Cmd.batch 
+        [ Cmd.map DatePickerFirstDateMsg Cmd.none
+          Cmd.map DatePickerSecondDateMsg Cmd.none ]
+
+let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
     | MapComponentMsg x ->
         let mapModel, _ = MapComponent.update x model.Map
@@ -43,18 +45,18 @@ let update (msg:Msg) (model:Model) : Model * Cmd<Msg> =
     | SecondMapComponentMsg x ->
         let mapModel, _ = MapComponent.update x model.SecondMap
         { model with SecondMap = mapModel }, Cmd.none
-    | DatepPickerFirstDateChange x ->
+    | DatePickerFirstDateMsg x ->
         let datepickerFirstModel = DatePicker.update x model.DatepickerFirst
         { model with DatepickerFirst = datepickerFirstModel }, Cmd.none
-    | DatepPickerSecondDateChange x ->
+    | DatePickerSecondDateMsg x ->
         let datepickerSecondModel = DatePicker.update x model.DatepickerSecond
         { model with DatepickerSecond = datepickerSecondModel; DatepickerFirst = datepickerSecondModel }, Cmd.none
-
-let view (model : Model) (dispatch : Msg -> unit) =
+        
+let view (model: Model) (dispatch: Msg -> unit) =
     Container.container [ Container.IsFluid ] [ 
         Content.content    [] [ 
-            DatePicker.view (model.DatepickerFirst) (DatepPickerFirstDateChange >> dispatch) 
-            DatePicker.view (model.DatepickerSecond) (DatepPickerSecondDateChange >> dispatch) 
+            DatePicker.view model.DatepickerFirst (DatePickerFirstDateMsg >> dispatch) 
+            DatePicker.view model.DatepickerSecond (DatePickerSecondDateMsg >> dispatch) 
             R.div   [ R.classList [ "block", true ] ]
                     [ Button.a [ ] [ R.str "Anchor" ]
                       Button.span [ ] [ R.str "Span" ]
